@@ -1,7 +1,7 @@
 Qsig-Token-Python: Qwilt Edge Authorization Token for Python
 =================================================================
 
-Qsig-Token-Python is Qwilt Edge Authorization Token in the First path segment, Query String, and Header for a client.
+Qsig-Token-Python is Qwilt Edge Authorization Token in the First path segment, Query String, and Cookie for a client.
 Qsig-Token-Python supports Python 2.6–2.7.
 
 Example
@@ -12,18 +12,17 @@ Example
     from qwilt.qsig import Qsig, QsigError
     import requests # just for this example
 
-    URL = "/sign/base/dir/of/path/because/cnt/is/set/to/minus1"
+    URL = "/path/to/content"
     HOSTNAME = "www.qwilt.com"
     WINDOW_SEC = 120
     KEY = "abdabcabcd"
 
-* KEY must be hexadecimal digit string with even-length.
-* Don't expose KEY on the public repository.
+* KEY should be a string of hexadecimal digits with even-length.
 
 .. code-block:: python
 
     signer = Qsig(key=KEY, window_seconds=WINDOWS_SEC, token_location = Qsig.kTokenLocationFirstInPath)
-    sig = signer.generate_all_token(URL)
+    sig = signer.generate_last_segment_sgn_token(URL)
     signed_url = signer.build_url(URL, sig)
     request_url = "http://{0}{1}".format(HOSTNAME, signed_url)
     response = requests.get(request_url)
