@@ -290,8 +290,8 @@ Generating token...'''.format(header_json,
         if self.token_location == self.kTokenLocationFirstInPath:
             return "/%s=%s%s" % (self.kTokenName, sig, url)
 
-        elif self._tokenLocation == self.kTokenLocationUriParam:
-            if "?" in path:
+        elif self.token_location == self.kTokenLocationUriParam:
+            if "?" in url:
                 return "%s&%s=%s" % (url, self.kTokenName, sig)
             else:
                 return "%s?%s=%s" % (url, self.kTokenName, sig)
