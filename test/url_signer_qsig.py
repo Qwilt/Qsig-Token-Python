@@ -4,13 +4,17 @@ import os
 import optparse
 import sys
 
-sys.path.append("../qwilt/qsig")
+dir_path = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(dir_path)
+sys.path.append("%s/qwilt/qsig" % parent)
 from qsig import Qsig, QsigError
 
 # ======================================================================================================================
 if __name__ == "__main__":
 
     p = optparse.OptionParser()
+    p.add_option("-v", "--verbose", action="store_true", default=False,
+                        help="Verbose output [default: '%default']")
     p.add_option("-p", "--path", type="string", default="/demo/path/for/signing?with=args",
                         help="Path to sign [default: '%default']")
     p.add_option("--kid", type="int", default=0,
@@ -33,13 +37,24 @@ if __name__ == "__main__":
                         help="Seconds Expiration from Current Time [default: 120")
     p.add_option("--host", type="string", default="",
                             help="Hostname to add to request")
+    p.add_option("--start-time", type="int", default=None,
+                        help="start time override for debug [default: '%default']")
+    p.add_option("--end-time", type="int", default=None,
+                        help="end time override  for debug [default: '%default']")
 
 
     (options, args) = p.parse_args()
 
     try:
         
-        s = Qsig(kid=options.kid, key=options.key, ip=options.cip, window_seconds=options.exp)
+        s = Qsig(kid=options.kid, 
+                 key=options.key, 
+                 ip=options.cip, 
+                 start_time=options.start_time, 
+                 end_time=options.end_time,
+                 window_seconds=options.exp, 
+                 verbose=options.verbose,
+                 )
 
         if options.typ == Qsig.kTypSgn:
             if options.cnt > 0:
@@ -59,11 +74,11 @@ if __name__ == "__main__":
 
         final_url = s.build_url(options.path, sig)
         if options.host:
-            print "https://" + options.host + final_url
+            print ("https://" + options.host + final_url)
         else:
-            print final_url
+            print (final_url)
 
     except Exception as ex:
-        print "Error: %s" % (ex)
+        print ("Error: %s" % (ex))
 
 

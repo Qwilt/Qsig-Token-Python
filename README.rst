@@ -2,7 +2,7 @@ Qsig-Token-Python: Qwilt Edge Authorization Token for Python
 =================================================================
 
 Qsig-Token-Python is Qwilt Edge Authorization Token in the First path segment, Query String, and Cookie for a client.
-Qsig-Token-Python supports Python 2.6–2.7.
+
 
 Example
 -------

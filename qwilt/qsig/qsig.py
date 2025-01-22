@@ -12,8 +12,32 @@ import base64
 
 if sys.version_info[0] >= 3:
     from urllib.parse import quote_plus
+
+    def encode(s):
+        return s.encode('utf-8')
+    
+    def castToBytes(strOrBytes):
+        # encoding a zero-length str returns a str, not bytes :-(
+        if len(strOrBytes)==0:
+            return b''
+        if strOrBytes and isinstance(strOrBytes, str):
+            # iso-8859-1 is a simple 1:1 mapping, no need to check length and such
+            strOrBytes = strOrBytes.encode('iso-8859-1')
+        return strOrBytes
+    
+    def decode(s):
+        return s.decode('utf-8')
 else:
     from urllib import quote_plus
+
+    def encode(s):
+        return s
+    
+    def decode(s):
+        return s
+    
+    def castToBytes(strOrBytes):
+        return strOrBytes
 
 # Force the local timezone to be GMT.
 os.environ['TZ'] = 'GMT'
@@ -52,7 +76,7 @@ class Qsig:
     @staticmethod
     def md5(msg):
         hsh = hashlib.md5()
-        hsh.update(msg)
+        hsh.update(encode(msg))
         return hsh.hexdigest()
 
     def __init__(self, token_type=None, token_name='__token__',
@@ -174,11 +198,11 @@ Generating token...'''.format(self.token_type if self.token_type else '',
 
         payload_dict["exp"] = end_time
 
-        header_json  = json.dumps(self.header_dict, separators=(',', ':'))
-        payload_json = json.dumps(payload_dict, separators=(',', ':'))
+        header_json  = json.dumps(self.header_dict, separators=(',', ':'), sort_keys=True)
+        payload_json = json.dumps(payload_dict, separators=(',', ':'), sort_keys=True)
                
-        header64  = base64.urlsafe_b64encode(header_json).replace("=", "")
-        payload64 = base64.urlsafe_b64encode(payload_json).replace("=", "")
+        header64  = base64.urlsafe_b64encode(encode(header_json.replace("=", "")))
+        payload64 = base64.urlsafe_b64encode(encode(payload_json.replace("=", "")))
 
         if self.verbose:
             print('''
@@ -188,11 +212,12 @@ Payload Json     : {1}
 Generating token...'''.format(header_json,
                             payload_json))
 
-        base = "%s.%s" % (header64, payload64)
-        sig = base64.urlsafe_b64encode(hmac.new(self.key, 
-            msg=base, 
-            digestmod=getattr(hashlib, 'sha256')).digest()).replace("=", "")
-        sig = "%s.%s" % (base, sig)
+        base = "%s.%s" % (decode(header64), decode(payload64))
+        _hmac = hmac.new(castToBytes(self.key), msg=castToBytes(base), digestmod=getattr(hashlib, 'sha256'))        
+        _sig  = base64.urlsafe_b64encode(_hmac.digest())
+        sigNe = decode(_sig).replace("=", "")
+        sig = "%s.%s" % (base, sigNe)
+
 
         if self.is_trim_jwt_header:
             sig = re.sub("^[^\.]+\.", "", sig)
